@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+  <head>
+    
+    <title>Assignment 4 - Chat Application</title>
+    <link href='https://fonts.googleapis.com/css?family=Fredoka+One' rel='stylesheet' type='text/css'>
+<!--    include bootstrap-->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<!--    include sockets-client module-->
+    <script src="/socket.io/socket.io.js"></script>
+<!--    include sockets-->
+    <script src="/socket.io-client/socket.io.js"></script>
+<!--    include jquery -->
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<!--    added my own style sheet but will not load so i manually included the css styles in this page-->
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    
+    <style>
+        
+        .logo {
+            
+            font-family: 'Fredoka One', cursive;
+            
+        }
+    
+        body {
+            
+            background-color:yellow;
+            
+        }
+        
+        .container {
+            margin-top:50px;
+            width:70%;
+            
+        }
+        
+        .jumbotron {
+            
+            background-color:black;
+            color:white;
+            padding-bottom:25px;
+            
+            
+        }
+        
+        .sendChat:hover {
+            
+            margin-top:25px;
+            height:50px;
+            background-color: white;
+            color:orangered;
+            border:none;
+            box-shadow: 0 0 0px 0px #ccc;
+            
+        }
+
+        
+        .setName {
+            
+            width:100%;
+            margin-top:15px;
+            margin-bottom:15px;
+        }
+        
+        .setName:hover {
+
+            background-color: white;
+            color:orangered;
+            border:none;
+            box-shadow: 0 0 0px 0px #ccc;
+            
+        }
+        
+        .black {
+            padding-top:15px;
+            padding-bottom:15px;
+            padding-left:20px;
+            background-color:orangered;
+            color:white;
+            border-radius: 25px 25px;
+            
+            font-family: 'Fredoka One', cursive;
+            
+        }
+        
+                @media (max-width: 700px) {
+          .container {
+            width:100%;
+          }
+        }
+        
+        .sendChat {
+            
+            margin-top:25px;
+            height:50px;
+            
+        }
+      
+    </style>
+
+  </head>
+  <body>
+   
+   <div class="container">
+<!--       Logo for Chatter World-->
+       <h1 class="logo">Chatter World!</h1> 
+       
+         <!-- Static navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">This is our new chatroom and meeting place.</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+           
+<!--           Enter DISPLAY NAME FORM   --> 
+           
+           <form id="displayNames">
+               <input id="uName" placeholder="Your display name?" class="form-control" autocomplete="off"/>
+               <input type="submit" class="btn btn-danger setName">
+           </form>
+           
+           
+<!--           Enter DISPLAY NAME FORM END-->
+           
+            <ul class="nav navbar-nav navbar-right">
+              <li class="active"><a href="#">HOME<span class="sr-only">(current)</span></a></li>
+              <li><a href="#">ABOUT</a></li>
+              <li><a href="#">CONTACT</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+       
+       <!--           MAIN CHAT DISPLAY AREA --> 
+       
+    <div class="jumbotron"> 
+        <p>A simple chat application built with HTML, CSS, and Node.JS. </p>
+        <h6 class="newUser"></h6>
+    </div>
+       
+       <!--           MAIN CHAT DISPLAY AREA END   --> 
+       
+<!--       USER INPUT FORM-->
+       
+        <div class="displayArea" id="DA"></div>
+
+       <div class="form-group">
+           
+           <h3>Type to begin chatting.</h3>
+            <form id="inputMsg" action="">
+              <input id="mychatmsg" placeholder="Your message here" class="form-control" autocomplete="off"/>                   <button style="width: 100%;" class="btn-danger sendChat">Send</button>
+            </form>
+       </div>
+       
+<!--       END USER INPUT FORM-->
+      
+<!--      USERS ONLINE AND WHO JOINED INFORMATION-->
+
+      <p class="pull-right">| Copyright Chatter.</p>
+      <p class="pull-left"></p>
+      <div id="uon" class="pull-left"></div>
+      <div id="uoff" class="pull-left"></div>
+      
+      
+   </div>
+   
+<!--   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>-->
+
+<!--BEGIN CLIENT SIDE INTERACTION WITH NODE SERVER-->
+
+<script> 
+    var socket = io();
+    
+        
+      $('#displayNames').submit(function(){ //WHEN USER CLICKS THE SUBMIT BUTTON THE SOCKET.EMIT FUNCTION IS ALSO USED TO CARRY OVER THE INFORMATION FROM THE USERS INPUT FIELD TO THE SERVER (BACK END). 
+          
+         
+          $('#uName').css('background', 'lightgreen');
+//          $('#uName').css('color', 'black');
+//          alert($('#uName').val(''));
+           socket.emit('unameSubmit', $('#uName').val()); 
+          //WE GIVE THE FIRST PARAMATER AS THE EVENT THAT WE WILL LATER CALL IN OUR EVENT HANDLER.
+          //THE SECOND PARAMETER HERE IS THE ACTUAL FORM FIELD VALUE THAT WE SEND 
+          
+//           $('#uName').val('');
+      });
+    
+    
+      $('#inputMsg').submit(function(){ //WHEN USER CLICKS THE SUBMIT BUTTON THE SOCKET.EMIT FUNCTION IS ALSO USED TO CARRY OVER THE INFORMATION FROM THE USERS INPUT FIELD TO THE SERVER (BACK END). 
+          
+//      $('form').submit(function(){
+          
+          
+        socket.emit('themsg', $('#mychatmsg').val()); //THIS IS THE MAIN FUNCTION THAT IS SENDING OUR SERVER THE USERS FORM FIELD INPUT SO THAT WE CAN PROCESS IT AND SEND IT BACK TO THE SITE (FRONT END).
+          
+        var myNum = 0;
+        
+//        socket.emit('justJoined' , myNum);
+          
+
+//        var message = document.querySelectorAll('#mychatmsg').value; //THE OLD METHOD BEFORE I DECIDED TO USE JQUERY! 
+          
+        $('#mychatmsg').val(''); //CLEAR THE VALUE OF THE FORM FIELD ONCE THE USER HITS ENTER/SUBMIT ON THE CHAT 
+//        socket.emit('themsg', message); //testing the socket.emit method
+//        message = "";
+        return false; //to stop from doing the default form action
+         
+//          socket.emit('themsg', $('#mychatmsg').val());
+//          
+//          $('#mychatmsg').val('');
+//          
+//          return false;
+      });
+    
+  
+    
+ 
+    socket.on('hello', function(msg){ //WE RECIEVE THE HELLO EVENT FROM THE SERVER THAT IS BEING HANDLED BY THIS EVENT HANDLER. WE HAVE GIVEN IT A DATA PARAMETER (MSG) THAT WE USE TO OUTPUT THE MESSAGE USER ENTERED IN THE FIELD ONTO THE WEBSITE. 
+        
+        var chatMsg = $('<p>').text(msg); //create a jquery DOM Object (<p>) with the users message inside
+        var myMsg = msg; 
+        
+        //THIS LINE OF CODE APPENDS THE NEW MESSAGE INTO THE EXISTING DIV AND CONTINUES DOING SO FOR ALL FUTURE MESSAGES SO WE GET A LIST OF ALL THE MESSAGES TO SHOW UP ON THE WEBPAGE
+        $('.jumbotron').append($('<h4 class="bg-danger black">').text("Anonymous: " + myMsg));
+//        $('.jumbotron').append($('guest:<p>').text(msg));
+            
+        
+    });
+    
+    socket.on('setName', function(dmx, totalUsers){ //CREATED ANOTHER EVENT HANDLER FOR THAT IS LISTENING FOR THE SETNAME EVENT 
+        //WE USE THIS FUNCTION TO ADD A LITTLE BIT OF CONTROL TO THE SITE BY LETTING THE VIEWER KNOW HOW MANY USERS ARE INSIDE THE CHAT AT ALL TIMES.
+        
+    
+        
+//        $('.jumbotron').append($('<p>').text(msg));
+        //APPEND THE DISPLAY NAME USER HAS ENTERED AND DISPLAY IT ON SITE ALONG WITH ADDITONAL INFORMATION SUCH AS TOTAL USERS IN THE CHAT. 
+        $('#uon').append($('<p class="bg-danger">').text(dmx + " has just joined!")); 
+        
+        // APPENDING THE NUMBER OF TOTAL USERS IN THE CHAT
+        $('#uoff').append($('<p class="bg-success">').text(' -- Total Users in the chat: ' + totalUsers));
+//        $('#displayNames').css('display', 'none');
+//        $('.jumbotron').append($('guest:<p>').text(msg));
+            
+        
+    });
+    
+    socket.on('left', function(totalUsers){  //THIS EVENT HANDLER UPDATED WHENEVER A USER DECIDES TO LEAVE THE CHAT. 
+        
+        //WORKING FEATURE - display when user leaves the chat. 
+        
+        $('#uoff').append($('<p class="bg-success">').text(' -- User has just left the chat, total users: ' + totalUsers));
+
+    });
+    
+//////////////////////////COMMENTED OUT STUFF THAT DIDNT WORK ///////////////////////////////
+    
+//    socket.on('setName', function(selectedUN){ 
+          
+          //convert JSON object 
+//        var uNameSet = !{JSON.stringify(selectedUN)}; //from string to json
+    
+//        var uNameSet = !{JSON.stringify(selectedUN['socket.username'])}; //convert JSON obect to string
+        
+        
+
+//        $('.now').append($('<h5 class="bg-danger">').text(uNameSet + " has just joined!"));
+//        $('.now').text(dmx + " has just joined!"));
+
+            
+        
+//    });
+    
+    
+    //THE NODE DOCUMENTATION WAS NOT VERY HELPFUL! 
+    
+</script>
+ 
+    
+  </body>
+</html>
